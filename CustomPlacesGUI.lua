@@ -1,7 +1,6 @@
 local CustomPlacesGUI = {}
 
 local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
@@ -101,18 +100,6 @@ function CustomPlacesGUI.Create(Places)
 		local Corner = Instance.new("UICorner")
 		Corner.CornerRadius = UDim.new(0, 8)
 		Corner.Parent = Button
-
-		Button.MouseEnter:Connect(function()
-			Button.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-		end)
-
-		Button.MouseLeave:Connect(function()
-			Button.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
-		end)
-
-		Button.MouseButton1Click:Connect(function()
-			TeleportService:Teleport(PlaceId, Player)
-		end)
 	end
 
 	local Dragging = false
