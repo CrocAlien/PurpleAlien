@@ -8,37 +8,45 @@ local Workspace = game:GetService("Workspace")
 --//==================================================
 
 PortalBuild.Decals = {
-	-- Temporary images for testing.
-	-- Replace these with your own asset IDs later.
+
+	-- Temporary testing images.
+	-- Replace these with your own PNG asset IDs later.
 
 	Stage1 = "rbxassetid://2281286723",
 	Stage2 = "rbxassetid://139404131810285",
-	Stage3 = "rbxassetid://5367816732",
+	Stage3 = "rbxassetid://8220913511",
 
-	-- Used later for ID portals if needed.
+	-- Used later for ID portals.
 	RobloxLogo = "rbxassetid://2281286723"
 }
 
---// Portal size
+--//==================================================
+--// PORTAL SIZE
+--//==================================================
+
 PortalBuild.PortalWidth = 5
 PortalBuild.PortalHeight = 8
 
---// Invisible hitbox
+--//==================================================
+--// HITBOX
+--//==================================================
+
 PortalBuild.HitboxWidth = 5
 PortalBuild.HitboxHeight = 8
 PortalBuild.HitboxThickness = 0.15
 
---// Opening animation
+--//==================================================
+--// ANIMATION
+--//==================================================
+
 PortalBuild.StageHoldTime = 0.5
 PortalBuild.StageGrowTime = 0.5
-
---// Wait after Stage 3 finishes opening
 PortalBuild.FinalHoldTime = 1
 
---// How long the portal exists
+-- How long the portal exists after being created.
 PortalBuild.Lifetime = 20
 
---// Rotation speed
+-- One full rotation takes this many seconds.
 PortalBuild.RotationTime = 8
 
 --//==================================================
@@ -50,14 +58,14 @@ PortalFolder.Name = "PurpleAlien_Portals"
 PortalFolder.Parent = Workspace
 
 --//==================================================
---// CREATE PORTAL PART
+--// CREATE VISUAL PORTAL
 --//==================================================
 
 local function createPortalPart(cframe)
 
 	local part = Instance.new("Part")
 
-	part.Name = "Portal"
+	part.Name = "PortalVisual"
 
 	part.Size = Vector3.new(
 		0.5,
@@ -68,12 +76,19 @@ local function createPortalPart(cframe)
 	part.CFrame = cframe
 
 	part.Anchored = true
+
 	part.CanCollide = false
 	part.CanTouch = false
 	part.CanQuery = false
 
-	-- Invisible because only the decals should be visible.
-	part.Transparency = 1
+	-- IMPORTANT:
+	-- The Part itself must NOT be fully transparent,
+	-- otherwise the Decals can disappear too.
+	part.Transparency = 0
+
+	-- The PNG/Decal provides the actual appearance.
+	part.Color = Color3.fromRGB(255, 255, 255)
+	part.Material = Enum.Material.SmoothPlastic
 
 	part.Parent = PortalFolder
 
@@ -81,7 +96,7 @@ local function createPortalPart(cframe)
 end
 
 --//==================================================
---// CREATE HITBOX
+--// CREATE INVISIBLE HITBOX
 --//==================================================
 
 local function createHitbox(cframe)
@@ -135,19 +150,24 @@ function PortalBuild.Create(cframe, portalType)
 
 	portalType = portalType or "Position"
 
+	--==================================================
+	-- CREATE OBJECTS
+	--==================================================
+
 	local portal =
 		createPortalPart(cframe)
 
 	local hitbox =
 		createHitbox(cframe)
 
-	-- Front and back
+	-- Front
 	local front =
 		createDecal(
 			portal,
 			Enum.NormalId.Front
 		)
 
+	-- Back
 	local back =
 		createDecal(
 			portal,
@@ -191,7 +211,6 @@ function PortalBuild.Create(cframe, portalType)
 
 			TweenInfo.new(
 				PortalBuild.StageGrowTime,
-
 				Enum.EasingStyle.Elastic,
 				Enum.EasingDirection.Out
 			),
@@ -206,7 +225,6 @@ function PortalBuild.Create(cframe, portalType)
 		)
 
 	stage2Tween:Play()
-
 	stage2Tween.Completed:Wait()
 
 	task.wait(
@@ -230,7 +248,6 @@ function PortalBuild.Create(cframe, portalType)
 
 			TweenInfo.new(
 				PortalBuild.StageGrowTime,
-
 				Enum.EasingStyle.Elastic,
 				Enum.EasingDirection.Out
 			),
@@ -245,7 +262,6 @@ function PortalBuild.Create(cframe, portalType)
 		)
 
 	stage3Tween:Play()
-
 	stage3Tween.Completed:Wait()
 
 	--==================================================
@@ -260,76 +276,85 @@ function PortalBuild.Create(cframe, portalType)
 	-- SLOW ROTATION
 	--==================================================
 
-	local rotationTween =
-		TweenService:Create(
+	local rotating = true
 
-			portal,
+	task.spawn(function()
 
-			TweenInfo.new(
+		while rotating and portal.Parent do
 
-				PortalBuild.RotationTime,
+			local rotationTween =
+				TweenService:Create(
 
-				Enum.EasingStyle.Linear,
-				Enum.EasingDirection.InOut,
+					portal,
 
-				-1,
+					TweenInfo.new(
+						PortalBuild.RotationTime,
+						Enum.EasingStyle.Linear,
+						Enum.EasingDirection.InOut
+					),
 
-				false
-			),
+					{
+						CFrame =
+							portal.CFrame
+							* CFrame.Angles(
+								0,
+								0,
+								math.rad(360)
+							)
+					}
+				)
 
-			{
-				CFrame =
-					portal.CFrame
-					* CFrame.Angles(
-						0,
-						math.rad(360),
-						0
-					)
-			}
-		)
+			rotationTween:Play()
+			rotationTween.Completed:Wait()
 
-	rotationTween:Play()
+		end
+
+	end)
 
 	--==================================================
-	-- LIFETIME
+	-- 20 SECOND LIFETIME
 	--==================================================
 
 	task.delay(
 		PortalBuild.Lifetime,
 		function()
 
-			if rotationTween then
-				rotationTween:Cancel()
-			end
+			rotating = false
 
-			if portal then
+			if portal and portal.Parent then
 				portal:Destroy()
 			end
 
-			if hitbox then
+			if hitbox and hitbox.Parent then
 				hitbox:Destroy()
 			end
 
 		end
 	)
 
+	--==================================================
+	-- RETURN PORTAL DATA
+	--==================================================
+
 	return {
+
 		Portal = portal,
+
 		Hitbox = hitbox,
+
 		Front = front,
+
 		Back = back,
 
 		Destroy = function()
 
-			if rotationTween then
-				rotationTween:Cancel()
-			end
+			rotating = false
 
-			if portal then
+			if portal and portal.Parent then
 				portal:Destroy()
 			end
 
-			if hitbox then
+			if hitbox and hitbox.Parent then
 				hitbox:Destroy()
 			end
 
