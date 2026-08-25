@@ -40,6 +40,8 @@ return function(Places)
 		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/PortalMakerGUI.lua"
 	))()
 
+	print("[PortalMaker] Scripts loaded")
+
 	--==================================================
 	-- CREATE GUIS
 	--==================================================
@@ -59,12 +61,16 @@ return function(Places)
 	local PlacesMainFrame = PlacesGUI:WaitForChild("MainFrame")
 	local PlacesScrollingFrame = PlacesMainFrame:WaitForChild("Places")
 
+	print("[PortalMaker] GUIs created")
+
 	--==================================================
 	-- PORTAL TYPE
 	--==================================================
 
 	local function SetPortalType(Type)
 		PortalType = Type
+
+		print("[PortalMaker] Portal type:", Type)
 
 		if Type ~= "Player" then
 			TargetPlayerName = ""
@@ -108,6 +114,12 @@ return function(Places)
 			Button.MouseButton1Click:Connect(function()
 				SelectedPlaceName = PlaceName
 				SelectedPlaceId = PlaceId
+
+				print(
+					"[PortalMaker] Selected place:",
+					PlaceName,
+					PlaceId
+				)
 			end)
 		end
 	end
@@ -143,10 +155,22 @@ return function(Places)
 
 		local Description = CustomSkin.Create()
 
-		if Description then
-			pcall(function()
-				Humanoid:ApplyDescription(Description)
-			end)
+		if not Description then
+			warn("[PortalMaker] CustomSkin.Create() failed")
+			return
+		end
+
+		local Success, Error = pcall(function()
+			Humanoid:ApplyDescription(Description)
+		end)
+
+		if not Success then
+			warn(
+				"[PortalMaker] Failed to apply custom skin:",
+				Error
+			)
+		else
+			print("[PortalMaker] Custom skin applied")
 		end
 	end
 
@@ -167,7 +191,7 @@ return function(Places)
 	end
 
 	--==================================================
-	-- PORTAL POSITIONS
+	-- GET PORTAL POSITIONS
 	--==================================================
 
 	local function GetPositionPortals()
@@ -189,7 +213,7 @@ return function(Places)
 	end
 
 	--==================================================
-	-- TARGET PLAYER
+	-- FIND PLAYER
 	--==================================================
 
 	local function FindPlayer()
@@ -220,21 +244,38 @@ return function(Places)
 	end
 
 	--==================================================
+	-- CREATE PORTAL
+	--==================================================
+
+	local function CreatePortal(CFrame)
+		local Result
+
+		task.spawn(function()
+			Result = PortalBuild.Create(
+				CFrame,
+				PortalType
+			)
+		end)
+
+		while Result == nil do
+			task.wait()
+		end
+
+		return Result
+	end
+
+	--==================================================
 	-- CREATE POSITION PORTALS
 	--==================================================
 
 	local function CreatePositionPortals()
 		local Front, Back = GetPositionPortals()
 
-		PortalA = PortalBuild.Create(
-			Front,
-			"Position"
-		)
+		PortalA = CreatePortal(Front)
 
-		PortalB = PortalBuild.Create(
-			Back,
-			"Position"
-		)
+		PortalB = CreatePortal(Back)
+
+		print("[PortalMaker] Position portals created")
 	end
 
 	--==================================================
@@ -245,36 +286,37 @@ return function(Places)
 		local Target = FindPlayer()
 
 		if not Target then
-			warn("PortalMaker: Player not found.")
+			warn(
+				"[PortalMaker] Player not found:",
+				TargetPlayerName
+			)
 			return false
 		end
 
 		local TargetCharacter = Target.Character
 
 		if not TargetCharacter then
-			warn("PortalMaker: Target has no character.")
+			warn("[PortalMaker] Target has no character")
 			return false
 		end
 
-		local TargetRoot = TargetCharacter:FindFirstChild(
-			"HumanoidRootPart"
-		)
+		local TargetRoot =
+			TargetCharacter:FindFirstChild("HumanoidRootPart")
 
 		if not TargetRoot then
-			warn("PortalMaker: Target has no HumanoidRootPart.")
+			warn("[PortalMaker] Target has no HumanoidRootPart")
 			return false
 		end
 
 		local Front = GetPositionPortals()
 
-		PortalA = PortalBuild.Create(
-			Front,
-			"Player"
-		)
+		PortalA = CreatePortal(Front)
 
-		PortalB = PortalBuild.Create(
-			TargetRoot.CFrame,
-			"Player"
+		PortalB = CreatePortal(TargetRoot.CFrame)
+
+		print(
+			"[PortalMaker] Player portals created for",
+			Target.Name
 		)
 
 		return true
@@ -286,27 +328,27 @@ return function(Places)
 
 	local function CreatePlacePortals()
 		if not SelectedPlaceId then
-			warn("PortalMaker: No place selected.")
+			warn("[PortalMaker] No place selected")
 			return false
 		end
 
 		local Front, Back = GetPositionPortals()
 
-		PortalA = PortalBuild.Create(
-			Front,
-			"Places"
-		)
+		PortalA = CreatePortal(Front)
 
-		PortalB = PortalBuild.Create(
-			Back,
-			"Places"
+		PortalB = CreatePortal(Back)
+
+		print(
+			"[PortalMaker] Place portal created for",
+			SelectedPlaceName,
+			SelectedPlaceId
 		)
 
 		return true
 	end
 
 	--==================================================
-	-- TELEPORT TO CFRAME
+	-- TELEPORT
 	--==================================================
 
 	local function TeleportTo(CFrame)
@@ -331,6 +373,7 @@ return function(Places)
 
 	local function ConnectPositionPortals()
 		if not PortalA or not PortalB then
+			warn("[PortalMaker] Cannot connect portals")
 			return
 		end
 
@@ -338,16 +381,30 @@ return function(Places)
 		local BHitbox = PortalB.Hitbox
 
 		AHitbox.Touched:Connect(function(Hit)
-			if Character and Hit:IsDescendantOf(Character) then
-				TeleportTo(BHitbox.CFrame)
+			if not Character then
+				return
 			end
+
+			if not Hit:IsDescendantOf(Character) then
+				return
+			end
+
+			TeleportTo(BHitbox.CFrame)
 		end)
 
 		BHitbox.Touched:Connect(function(Hit)
-			if Character and Hit:IsDescendantOf(Character) then
-				TeleportTo(AHitbox.CFrame)
+			if not Character then
+				return
 			end
+
+			if not Hit:IsDescendantOf(Character) then
+				return
+			end
+
+			TeleportTo(AHitbox.CFrame)
 		end)
+
+		print("[PortalMaker] Portal teleport connections created")
 	end
 
 	--==================================================
@@ -377,6 +434,12 @@ return function(Places)
 			end
 
 			TeleportCooldown = true
+
+			print(
+				"[PortalMaker] Teleporting to:",
+				SelectedPlaceName,
+				SelectedPlaceId
+			)
 
 			TeleportService:Teleport(
 				SelectedPlaceId,
@@ -412,10 +475,15 @@ return function(Places)
 	-- START
 	--==================================================
 
+	print("[PortalMaker] Starting")
+
 	ApplyCustomSkin()
 
 	task.wait(SkinDelay)
 
 	UpdateCharacter()
+
 	CreatePortals()
+
+	print("[PortalMaker] Ready")
 end
