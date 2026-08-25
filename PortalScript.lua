@@ -3,7 +3,6 @@ return function(Places)
 	local TeleportService = game:GetService("TeleportService")
 
 	local Player = Players.LocalPlayer
-	local PlayerGui = Player:WaitForChild("PlayerGui")
 
 	--==================================================
 	-- SETTINGS
@@ -25,74 +24,20 @@ return function(Places)
 	-- LOAD GUI SCRIPTS
 	--==================================================
 
-	local function LoadScript(URL, Name)
-		local Success, Result = pcall(function()
-			local Source = game:HttpGet(URL)
-			local Function = loadstring(Source)
+	local PortalMakerGUI = loadstring(game:HttpGet(
+		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/PortalMakerGUI.lua"
+	))()
 
-			if not Function then
-				error("loadstring returned nil")
-			end
-
-			return Function()
-		end)
-
-		if not Success then
-			warn("[PortalScript] Failed to load " .. Name .. ": " .. tostring(Result))
-			return nil
-		end
-
-		print("[PortalScript] Loaded " .. Name)
-		return Result
-	end
-
-	local PortalMakerGUI = LoadScript(
-		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/PortalMakerGUI.lua",
-		"PortalMakerGUI"
-	)
-
-	local CustomPlacesGUI = LoadScript(
-		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/CustomPlacesGUI.lua",
-		"CustomPlacesGUI"
-	)
+	local CustomPlacesGUI = loadstring(game:HttpGet(
+		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/CustomPlacesGUI.lua"
+	))()
 
 	--==================================================
 	-- CREATE GUIS
 	--==================================================
 
-	if not PortalMakerGUI then
-		warn("[PortalScript] PortalMakerGUI could not be loaded.")
-		return
-	end
-
-	if not CustomPlacesGUI then
-		warn("[PortalScript] CustomPlacesGUI could not be loaded.")
-		return
-	end
-
-	local Success, PortalMaker = pcall(function()
-		return PortalMakerGUI.Create()
-	end)
-
-	if not Success then
-		warn("[PortalScript] PortalMakerGUI.Create failed: " .. tostring(PortalMaker))
-		return
-	end
-
-	local Success2, PlacesGUI = pcall(function()
-		return CustomPlacesGUI.Create(Places or {})
-	end)
-
-	if not Success2 then
-		warn("[PortalScript] CustomPlacesGUI.Create failed: " .. tostring(PlacesGUI))
-		return
-	end
-
-	print("[PortalScript] GUIs created successfully")
-
-	--==================================================
-	-- GET GUI OBJECTS
-	--==================================================
+	local PortalMaker = PortalMakerGUI.Create()
+	local PlacesGUI = CustomPlacesGUI.Create(Places or {})
 
 	local PortalMakerFrame = PortalMaker:WaitForChild("MainFrame")
 	local ButtonsFrame = PortalMakerFrame:WaitForChild("Buttons")
@@ -107,28 +52,16 @@ return function(Places)
 	local PlacesScrollingFrame = PlacesMainFrame:WaitForChild("Places")
 
 	--==================================================
-	-- LOAD MAIN SYSTEM SCRIPTS
+	-- LOAD MAIN SYSTEMS
 	--==================================================
 
-	local PortalBuild = LoadScript(
-		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/PortalBuild.lua",
-		"PortalBuild"
-	)
+	local PortalBuild = loadstring(game:HttpGet(
+		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/PortalBuild.lua"
+	))()
 
-	local CustomSkin = LoadScript(
-		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/CustomSkin.lua",
-		"CustomSkin"
-	)
-
-	if not PortalBuild then
-		warn("[PortalScript] PortalBuild failed to load.")
-		return
-	end
-
-	if not CustomSkin then
-		warn("[PortalScript] CustomSkin failed to load.")
-		return
-	end
+	local CustomSkin = loadstring(game:HttpGet(
+		"https://raw.githubusercontent.com/CrocAlien/PurpleAlien/Builds/CustomSkin.lua"
+	))()
 
 	--==================================================
 	-- PORTAL TYPE
@@ -146,8 +79,6 @@ return function(Places)
 			SelectedPlaceName = nil
 			SelectedPlaceId = nil
 		end
-
-		print("[PortalScript] Portal type:", Type)
 	end
 
 	PositionButton.MouseButton1Click:Connect(function()
@@ -181,12 +112,6 @@ return function(Places)
 			Button.MouseButton1Click:Connect(function()
 				SelectedPlaceName = PlaceName
 				SelectedPlaceId = PlaceId
-
-				print(
-					"[PortalScript] Selected place:",
-					PlaceName,
-					PlaceId
-				)
 			end)
 		end
 	end
@@ -220,34 +145,19 @@ return function(Places)
 	local function ApplyCustomSkin()
 		UpdateCharacter()
 
-		local Success, Description = pcall(function()
-			return CustomSkin.Create()
-		end)
-
-		if not Success then
-			warn(
-				"[PortalScript] CustomSkin.Create failed:",
-				Description
-			)
-			return
-		end
+		local Description = CustomSkin.Create()
 
 		if not Description then
-			warn("[PortalScript] CustomSkin returned no description.")
+			warn("CustomSkin did not return a HumanoidDescription.")
 			return
 		end
 
-		local Applied, Error = pcall(function()
+		local Success, Error = pcall(function()
 			Humanoid:ApplyDescription(Description)
 		end)
 
-		if not Applied then
-			warn(
-				"[PortalScript] Failed to apply CustomSkin:",
-				Error
-			)
-		else
-			print("[PortalScript] Custom skin applied")
+		if not Success then
+			warn("Failed to apply CustomSkin:", Error)
 		end
 	end
 
@@ -327,29 +237,17 @@ return function(Places)
 	local function CreatePositionPortals()
 		local Front, Back = GetPortalPositions()
 
-		local SuccessA, ResultA = pcall(function()
-			return PortalBuild.Create(Front, "Position")
-		end)
+		PortalA = PortalBuild.Create(
+			Front,
+			"Position"
+		)
 
-		if not SuccessA then
-			warn("[PortalScript] Portal A failed:", ResultA)
-			return false
-		end
+		PortalB = PortalBuild.Create(
+			Back,
+			"Position"
+		)
 
-		PortalA = ResultA
-
-		local SuccessB, ResultB = pcall(function()
-			return PortalBuild.Create(Back, "Position")
-		end)
-
-		if not SuccessB then
-			warn("[PortalScript] Portal B failed:", ResultB)
-			return false
-		end
-
-		PortalB = ResultB
-
-		return true
+		return PortalA and PortalB
 	end
 
 	--==================================================
@@ -360,14 +258,14 @@ return function(Places)
 		local Target = FindPlayer()
 
 		if not Target then
-			warn("[PortalScript] Player not found:", TargetPlayerName)
+			warn("Player not found:", TargetPlayerName)
 			return false
 		end
 
 		local TargetCharacter = Target.Character
 
 		if not TargetCharacter then
-			warn("[PortalScript] Target has no character.")
+			warn("Target player has no character.")
 			return false
 		end
 
@@ -376,35 +274,23 @@ return function(Places)
 		)
 
 		if not TargetRoot then
-			warn("[PortalScript] Target has no HumanoidRootPart.")
+			warn("Target player has no HumanoidRootPart.")
 			return false
 		end
 
 		local Front = GetPortalPositions()
 
-		local SuccessA, ResultA = pcall(function()
-			return PortalBuild.Create(Front, "Player")
-		end)
+		PortalA = PortalBuild.Create(
+			Front,
+			"Player"
+		)
 
-		if not SuccessA then
-			warn("[PortalScript] Player portal A failed:", ResultA)
-			return false
-		end
+		PortalB = PortalBuild.Create(
+			TargetRoot.CFrame,
+			"Player"
+		)
 
-		PortalA = ResultA
-
-		local SuccessB, ResultB = pcall(function()
-			return PortalBuild.Create(TargetRoot.CFrame, "Player")
-		end)
-
-		if not SuccessB then
-			warn("[PortalScript] Player portal B failed:", ResultB)
-			return false
-		end
-
-		PortalB = ResultB
-
-		return true
+		return PortalA and PortalB
 	end
 
 	--==================================================
@@ -413,35 +299,23 @@ return function(Places)
 
 	local function CreatePlacePortals()
 		if not SelectedPlaceId then
-			warn("[PortalScript] No place selected.")
+			warn("No place selected.")
 			return false
 		end
 
 		local Front, Back = GetPortalPositions()
 
-		local SuccessA, ResultA = pcall(function()
-			return PortalBuild.Create(Front, "Places")
-		end)
+		PortalA = PortalBuild.Create(
+			Front,
+			"Places"
+		)
 
-		if not SuccessA then
-			warn("[PortalScript] Place portal A failed:", ResultA)
-			return false
-		end
+		PortalB = PortalBuild.Create(
+			Back,
+			"Places"
+		)
 
-		PortalA = ResultA
-
-		local SuccessB, ResultB = pcall(function()
-			return PortalBuild.Create(Back, "Places")
-		end)
-
-		if not SuccessB then
-			warn("[PortalScript] Place portal B failed:", ResultB)
-			return false
-		end
-
-		PortalB = ResultB
-
-		return true
+		return PortalA and PortalB
 	end
 
 	--==================================================
@@ -550,14 +424,10 @@ return function(Places)
 	-- START
 	--==================================================
 
-	print("[PortalScript] Starting")
-
 	ApplyCustomSkin()
 
 	task.wait(SkinDelay)
 
 	UpdateCharacter()
 	CreatePortals()
-
-	print("[PortalScript] Ready")
 end
