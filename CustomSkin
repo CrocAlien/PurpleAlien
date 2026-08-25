@@ -1,0 +1,121 @@
+local HumanoidDescription = {}
+
+--==================================================
+-- DEFAULT PROPERTIES
+--==================================================
+
+HumanoidDescription.Properties = {
+
+	--==================================================
+	-- BODY PARTS
+	--==================================================
+
+	BackAccessory = "",
+	Face = 0,
+	FrontAccessory = "",
+	HairAccessory = "",
+	HatAccessory = "",
+	NeckAccessory = "",
+	ShouldersAccessory = "",
+	WaistAccessory = "",
+
+	--==================================================
+	-- CLASSIC CLOTHING
+	--==================================================
+
+	Shirt = 0,
+	Pants = 0,
+	GraphicTShirt = 0,
+
+	--==================================================
+	-- BODY SCALES
+	--==================================================
+
+	BodyTypeScale = 0,
+	DepthScale = 1,
+	HeadScale = 1,
+	HeightScale = 1,
+	ProportionScale = 0,
+	WidthScale = 1,
+
+	--==================================================
+	-- BODY COLORS
+	--==================================================
+
+	HeadColor = Color3.fromRGB(255, 204, 153),
+	LeftArmColor = Color3.fromRGB(255, 204, 153),
+	LeftLegColor = Color3.fromRGB(255, 204, 153),
+	RightArmColor = Color3.fromRGB(255, 204, 153),
+	RightLegColor = Color3.fromRGB(255, 204, 153),
+	TorsoColor = Color3.fromRGB(255, 204, 153),
+
+	--==================================================
+	-- ANIMATION
+	--==================================================
+
+	ClimbAnimation = 0,
+	FallAnimation = 0,
+	IdleAnimation = 0,
+	JumpAnimation = 0,
+	RunAnimation = 0,
+	SwimAnimation = 0,
+	WalkAnimation = 0
+}
+
+--==================================================
+-- CREATE
+--==================================================
+
+function HumanoidDescription.Create(properties)
+
+	local description =
+		Instance.new("HumanoidDescription")
+
+	properties =
+		properties or {}
+
+	-- Apply default properties unless
+	-- the main script supplied a custom value.
+	for property, value in pairs(
+		HumanoidDescription.Properties
+	) do
+
+		if properties[property] ~= nil then
+
+			description[property] =
+				properties[property]
+
+		else
+
+			description[property] =
+				value
+
+		end
+
+	end
+
+	-- Allow any additional valid
+	-- HumanoidDescription properties.
+	for property, value in pairs(properties) do
+
+		pcall(function()
+
+			description[property] =
+				value
+
+		end)
+
+	end
+
+	-- IMPORTANT:
+	-- The description is NOT applied
+	-- to any Humanoid.
+	--
+	-- It is also not parented anywhere.
+	--
+	-- The main script decides what to do with it.
+
+	return description
+end
+
+return HumanoidDescription
