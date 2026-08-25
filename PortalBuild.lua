@@ -7,13 +7,13 @@ local Workspace = game:GetService("Workspace")
 -- CONFIG
 --==================================================
 
-PortalBuild.Decals = {
+PortalBuild.Images = {
 	Stage1 = "rbxassetid://82149604426664",
 	Stage2 = "rbxassetid://96231048684434",
 	Stage3 = "rbxassetid://119880285735898"
 }
 
--- Final visual size
+-- Portal's final physical size
 PortalBuild.PortalWidth = 5
 PortalBuild.PortalHeight = 8
 
@@ -22,14 +22,12 @@ PortalBuild.HitboxWidth = 5
 PortalBuild.HitboxHeight = 8
 PortalBuild.HitboxThickness = 0.15
 
--- Opening animation
+-- Animation
 PortalBuild.StageHoldTime = 0.5
 PortalBuild.StageGrowTime = 0.5
-
--- Wait after the final portal finishes opening
 PortalBuild.FinalHoldTime = 1
 
--- Total lifetime AFTER creation
+-- Lifetime AFTER the portal finishes opening
 PortalBuild.Lifetime = 20
 
 -- One complete rotation
@@ -39,12 +37,16 @@ PortalBuild.RotationTime = 8
 -- FOLDER
 --==================================================
 
-local PortalFolder = Instance.new("Folder")
-PortalFolder.Name = "PurpleAlien_Portals"
-PortalFolder.Parent = Workspace
+local PortalFolder = Workspace:FindFirstChild("PurpleAlien_Portals")
+
+if not PortalFolder then
+	PortalFolder = Instance.new("Folder")
+	PortalFolder.Name = "PurpleAlien_Portals"
+	PortalFolder.Parent = Workspace
+end
 
 --==================================================
--- VISUAL PART
+-- CREATE VISUAL PART
 --==================================================
 
 local function createPortalPart(cframe)
@@ -53,8 +55,6 @@ local function createPortalPart(cframe)
 
 	part.Name = "PortalVisual"
 
-	-- IMPORTANT:
-	-- Keep the visual part at its FINAL size.
 	part.Size = Vector3.new(
 		PortalBuild.PortalWidth,
 		PortalBuild.PortalHeight,
@@ -68,8 +68,7 @@ local function createPortalPart(cframe)
 	part.CanTouch = false
 	part.CanQuery = false
 
-	-- Make the actual Part invisible.
-	-- The Decals are what we see.
+	-- Completely invisible.
 	part.Transparency = 1
 
 	part.Parent = PortalFolder
@@ -78,7 +77,7 @@ local function createPortalPart(cframe)
 end
 
 --==================================================
--- HITBOX
+-- CREATE HITBOX
 --==================================================
 
 local function createHitbox(cframe)
@@ -109,35 +108,62 @@ local function createHitbox(cframe)
 end
 
 --==================================================
--- DECAL
+-- CREATE IMAGE SURFACE
 --==================================================
 
-local function createDecal(parent, face)
+local function createImageSurface(portal, face)
 
-	local decal = Instance.new("Decal")
+	local surface = Instance.new("SurfaceGui")
 
-	decal.Face = face
+	surface.Name = "PortalSurface"
 
-	decal.Transparency = 0
+	surface.Face = face
 
-	decal.Parent = parent
+	surface.AlwaysOnTop = true
 
-	return decal
+	surface.LightInfluence = 0
+
+	surface.SizingMode =
+		Enum.SurfaceGuiSizingMode.PixelsPerStud
+
+	surface.PixelsPerStud = 100
+
+	surface.Parent = portal
+
+	local image = Instance.new("ImageLabel")
+
+	image.Name = "PortalImage"
+
+	image.BackgroundTransparency = 1
+
+	image.Size = UDim2.fromScale(1, 1)
+
+	image.Position = UDim2.fromScale(0, 0)
+
+	image.AnchorPoint = Vector2.new(0, 0)
+
+	image.ScaleType = Enum.ScaleType.Stretch
+
+	image.ImageTransparency = 0
+
+	image.Parent = surface
+
+	return surface, image
 end
 
 --==================================================
 -- SET IMAGE
 --==================================================
 
-local function setImage(front, back, image)
+local function setImage(frontImage, backImage, asset)
 
-	front.Texture = image
-	back.Texture = image
+	frontImage.Image = asset
+	backImage.Image = asset
 
 end
 
 --==================================================
--- CREATE
+-- CREATE PORTAL
 --==================================================
 
 function PortalBuild.Create(cframe, portalType)
@@ -145,7 +171,7 @@ function PortalBuild.Create(cframe, portalType)
 	portalType = portalType or "Position"
 
 	--==================================================
-	-- CREATE PARTS
+	-- CREATE
 	--==================================================
 
 	local portal =
@@ -154,14 +180,14 @@ function PortalBuild.Create(cframe, portalType)
 	local hitbox =
 		createHitbox(cframe)
 
-	local front =
-		createDecal(
+	local frontSurface, frontImage =
+		createImageSurface(
 			portal,
 			Enum.NormalId.Front
 		)
 
-	local back =
-		createDecal(
+	local backSurface, backImage =
+		createImageSurface(
 			portal,
 			Enum.NormalId.Back
 		)
@@ -170,47 +196,24 @@ function PortalBuild.Create(cframe, portalType)
 	-- START SMALL
 	--==================================================
 
-	setImage(
-		front,
-		back,
-		PortalBuild.Decals.Stage1
+	portal.Size = Vector3.new(
+		0.5,
+		0.5,
+		0.05
 	)
 
-	-- Decal starts invisible.
-	front.Transparency = 1
-	back.Transparency = 1
+	setImage(
+		frontImage,
+		backImage,
+		PortalBuild.Images.Stage1
+	)
+
+	frontImage.ImageTransparency = 0
+	backImage.ImageTransparency = 0
 
 	--==================================================
-	-- STAGE 1 APPEAR
+	-- STAGE 1
 	--==================================================
-
-	local appearInfo =
-		TweenInfo.new(
-			0.15,
-			Enum.EasingStyle.Sine,
-			Enum.EasingDirection.Out
-		)
-
-	local frontAppear =
-		TweenService:Create(
-			front,
-			appearInfo,
-			{
-				Transparency = 0
-			}
-		)
-
-	local backAppear =
-		TweenService:Create(
-			back,
-			appearInfo,
-			{
-				Transparency = 0
-			}
-		)
-
-	frontAppear:Play()
-	backAppear:Play()
 
 	task.wait(
 		PortalBuild.StageHoldTime
@@ -221,16 +224,36 @@ function PortalBuild.Create(cframe, portalType)
 	--==================================================
 
 	setImage(
-		front,
-		back,
-		PortalBuild.Decals.Stage2
+		frontImage,
+		backImage,
+		PortalBuild.Images.Stage2
 	)
 
-	-- Brief scale-like effect using transparency.
-	front.Transparency = 0
-	back.Transparency = 0
+	local stage2Tween =
+		TweenService:Create(
 
-	-- Hold Stage 2
+			portal,
+
+			TweenInfo.new(
+				PortalBuild.StageGrowTime,
+
+				Enum.EasingStyle.Elastic,
+				Enum.EasingDirection.Out
+			),
+
+			{
+				Size = Vector3.new(
+					PortalBuild.PortalWidth * 0.7,
+					PortalBuild.PortalHeight * 0.7,
+					0.05
+				)
+			}
+		)
+
+	stage2Tween:Play()
+
+	stage2Tween.Completed:Wait()
+
 	task.wait(
 		PortalBuild.StageHoldTime
 	)
@@ -240,16 +263,38 @@ function PortalBuild.Create(cframe, portalType)
 	--==================================================
 
 	setImage(
-		front,
-		back,
-		PortalBuild.Decals.Stage3
+		frontImage,
+		backImage,
+		PortalBuild.Images.Stage3
 	)
 
-	front.Transparency = 0
-	back.Transparency = 0
+	local stage3Tween =
+		TweenService:Create(
+
+			portal,
+
+			TweenInfo.new(
+				PortalBuild.StageGrowTime,
+
+				Enum.EasingStyle.Elastic,
+				Enum.EasingDirection.Out
+			),
+
+			{
+				Size = Vector3.new(
+					PortalBuild.PortalWidth,
+					PortalBuild.PortalHeight,
+					0.05
+				)
+			}
+		)
+
+	stage3Tween:Play()
+
+	stage3Tween.Completed:Wait()
 
 	--==================================================
-	-- FINAL WAIT
+	-- FINAL HOLD
 	--==================================================
 
 	task.wait(
@@ -273,6 +318,7 @@ function PortalBuild.Create(cframe, portalType)
 
 					TweenInfo.new(
 						PortalBuild.RotationTime,
+
 						Enum.EasingStyle.Linear,
 						Enum.EasingDirection.InOut
 					),
@@ -324,8 +370,9 @@ function PortalBuild.Create(cframe, portalType)
 	return {
 		Portal = portal,
 		Hitbox = hitbox,
-		Front = front,
-		Back = back,
+
+		Front = frontImage,
+		Back = backImage,
 
 		Destroy = function()
 
