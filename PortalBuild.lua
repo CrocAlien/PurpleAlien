@@ -28,11 +28,12 @@ PortalBuild.HitboxThickness = 0.15
 -- TIMING
 --==================================================
 
--- Original was 0.5.
--- Everything involved in the opening is now 3x slower.
+-- Staying still is 2x slower than the original 0.5 seconds.
+PortalBuild.StageHoldTime = 1
 
-PortalBuild.StageHoldTime = 1.5
+-- Growing is 3x slower than the original 0.5 seconds.
 PortalBuild.StageGrowTime = 1.5
+
 PortalBuild.FinalHoldTime = 3
 
 -- How long the completed portal remains.
@@ -72,8 +73,7 @@ local function createPortalPart(cframe)
 	part.Name =
 		"PortalVisual"
 
-	-- Keep the Part at its final size.
-	-- The IMAGE itself will be animated.
+	-- The physical Part ALWAYS stays the same size.
 	part.Size =
 		Vector3.new(
 			PortalBuild.PortalWidth,
@@ -196,7 +196,6 @@ local function createImageSurface(
 			0.5
 		)
 
-	-- Start tiny.
 	image.Position =
 		UDim2.fromScale(
 			0.5,
@@ -236,6 +235,29 @@ local function setImage(
 
 	back.Image =
 		image
+
+end
+
+--==================================================
+-- RESET IMAGE TO SMALL
+--==================================================
+
+local function resetImageSize(
+	front,
+	back
+)
+
+	front.Size =
+		UDim2.fromScale(
+			0.15,
+			0.15
+		)
+
+	back.Size =
+		UDim2.fromScale(
+			0.15,
+			0.15
+		)
 
 end
 
@@ -336,19 +358,20 @@ function PortalBuild.Create(
 		PortalBuild.Images.Stage1
 	)
 
-	-- Tiny crack
-	front.Size =
-		UDim2.fromScale(
-			0.15,
-			0.15
-		)
+	-- Start tiny.
+	resetImageSize(
+		front,
+		back
+	)
 
-	back.Size =
-		UDim2.fromScale(
-			0.15,
-			0.15
-		)
+	-- Grow to full size.
+	growImage(
+		front,
+		back,
+		1
+	)
 
+	-- Stay at full size.
 	task.wait(
 		PortalBuild.StageHoldTime
 	)
@@ -357,18 +380,27 @@ function PortalBuild.Create(
 	-- STAGE 2
 	--==================================================
 
+	-- Shrink the IMAGE only.
+	-- The physical portal stays 5x8.
+	resetImageSize(
+		front,
+		back
+	)
+
 	setImage(
 		front,
 		back,
 		PortalBuild.Images.Stage2
 	)
 
+	-- Grow back to the exact same full size.
 	growImage(
 		front,
 		back,
-		0.65
+		1
 	)
 
+	-- Stay at full size.
 	task.wait(
 		PortalBuild.StageHoldTime
 	)
@@ -377,12 +409,19 @@ function PortalBuild.Create(
 	-- STAGE 3
 	--==================================================
 
+	-- Shrink the IMAGE only again.
+	resetImageSize(
+		front,
+		back
+	)
+
 	setImage(
 		front,
 		back,
 		PortalBuild.Images.Stage3
 	)
 
+	-- Grow back to the exact same full size.
 	growImage(
 		front,
 		back,
