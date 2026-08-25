@@ -158,11 +158,7 @@ function PortalMakerGUI.Create()
 	DescriptionCorner.CornerRadius = UDim.new(0, 8)
 	DescriptionCorner.Parent = Description
 
-	local CurrentType = "Position"
-
-	local function SetType(Type)
-		CurrentType = Type
-
+	local function SetVisualType(Type)
 		PositionButton.BackgroundColor3 =
 			Type == "Position"
 			and Color3.fromRGB(90, 150, 255)
@@ -185,23 +181,23 @@ function PortalMakerGUI.Create()
 				"Position portals connect two positions in the world. Walking into one portal teleports you to the other portal's position."
 		elseif Type == "Player" then
 			Description.Text =
-				"Player portals connect you to another player. Enter a player's name in the textbox above to select who the portal should connect to."
+				"Player portals connect you to another player. Enter a player's name in the textbox to configure the target."
 		elseif Type == "Places" then
 			Description.Text =
-				"Places portals connect to Roblox places. A portal can be configured to send you to another place when you enter it."
+				"Places portals connect to Roblox places. Use the Places system to configure which place a portal should use."
 		end
 	end
 
 	PositionButton.MouseButton1Click:Connect(function()
-		SetType("Position")
+		SetVisualType("Position")
 	end)
 
 	PlayerButton.MouseButton1Click:Connect(function()
-		SetType("Player")
+		SetVisualType("Player")
 	end)
 
 	PlacesButton.MouseButton1Click:Connect(function()
-		SetType("Places")
+		SetVisualType("Places")
 	end)
 
 	local Dragging = false
