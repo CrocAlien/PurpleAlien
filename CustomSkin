@@ -1,17 +1,13 @@
-local HumanoidDescription = {}
+local CustomSkin = {}
 
 --==================================================
--- DEFAULT PROPERTIES
+-- HUMANOID DESCRIPTION PROPERTIES
 --==================================================
 
-HumanoidDescription.Properties = {
-
-	--==================================================
-	-- BODY PARTS
-	--==================================================
-
+CustomSkin.Properties = {
+	-- Accessories
 	BackAccessory = "",
-	Face = 0,
+	FaceAccessory = "",
 	FrontAccessory = "",
 	HairAccessory = "",
 	HatAccessory = "",
@@ -19,29 +15,21 @@ HumanoidDescription.Properties = {
 	ShouldersAccessory = "",
 	WaistAccessory = "",
 
-	--==================================================
-	-- CLASSIC CLOTHING
-	--==================================================
-
+	-- Classic clothing
 	Shirt = 0,
 	Pants = 0,
 	GraphicTShirt = 0,
 
-	--==================================================
-	-- BODY SCALES
-	--==================================================
+	-- Body parts
+	Face = 0,
+	Head = 0,
+	LeftArm = 0,
+	LeftLeg = 0,
+	RightArm = 0,
+	RightLeg = 0,
+	Torso = 0,
 
-	BodyTypeScale = 0,
-	DepthScale = 1,
-	HeadScale = 1,
-	HeightScale = 1,
-	ProportionScale = 0,
-	WidthScale = 1,
-
-	--==================================================
-	-- BODY COLORS
-	--==================================================
-
+	-- Body colors
 	HeadColor = Color3.fromRGB(255, 204, 153),
 	LeftArmColor = Color3.fromRGB(255, 204, 153),
 	LeftLegColor = Color3.fromRGB(255, 204, 153),
@@ -49,10 +37,15 @@ HumanoidDescription.Properties = {
 	RightLegColor = Color3.fromRGB(255, 204, 153),
 	TorsoColor = Color3.fromRGB(255, 204, 153),
 
-	--==================================================
-	-- ANIMATION
-	--==================================================
+	-- Body scales
+	BodyTypeScale = 0,
+	DepthScale = 1,
+	HeadScale = 1,
+	HeightScale = 1,
+	ProportionScale = 0,
+	WidthScale = 1,
 
+	-- Animations
 	ClimbAnimation = 0,
 	FallAnimation = 0,
 	IdleAnimation = 0,
@@ -63,59 +56,19 @@ HumanoidDescription.Properties = {
 }
 
 --==================================================
--- CREATE
+-- CREATE DESCRIPTION
 --==================================================
 
-function HumanoidDescription.Create(properties)
+function CustomSkin.Create()
+	local description = Instance.new("HumanoidDescription")
 
-	local description =
-		Instance.new("HumanoidDescription")
-
-	properties =
-		properties or {}
-
-	-- Apply default properties unless
-	-- the main script supplied a custom value.
-	for property, value in pairs(
-		HumanoidDescription.Properties
-	) do
-
-		if properties[property] ~= nil then
-
-			description[property] =
-				properties[property]
-
-		else
-
-			description[property] =
-				value
-
-		end
-
-	end
-
-	-- Allow any additional valid
-	-- HumanoidDescription properties.
-	for property, value in pairs(properties) do
-
+	for property, value in pairs(CustomSkin.Properties) do
 		pcall(function()
-
-			description[property] =
-				value
-
+			description[property] = value
 		end)
-
 	end
-
-	-- IMPORTANT:
-	-- The description is NOT applied
-	-- to any Humanoid.
-	--
-	-- It is also not parented anywhere.
-	--
-	-- The main script decides what to do with it.
 
 	return description
 end
 
-return HumanoidDescription
+return CustomSkin
